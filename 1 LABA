@@ -1,0 +1,126 @@
+from tkinter import *
+import re
+
+
+#создание класса, в котором прописана работа всего калькулятора
+class Main(Frame):
+    #создание функции, которая связывает интерфейс и логику калькулятора
+    def __init__(self, root):
+        super(Main, self).__init__(root)
+        self.build()
+    #функция создания частей интерфейса калькулятора
+    def build(self):
+        #переменная, в которую закладывается выражение, которое надо посчитать
+        self.formula = "0"
+        #строка, в которой показывается вводимое выражение
+        self.lbl = Label(text=self.formula, font=("Times New Roman", 21, "bold"), bg="#000", foreground="#FFF")
+        self.lbl.place(x=11, y=50)
+        btns = [
+            "C", "DEL", "*", "=",
+            "1", "2", "3", "/",
+            "4", "5", "6", "+",
+            "7", "8", "9", "-",
+            "(", "0", ")", "(mod"
+        ]
+        #координаты размещения первой кнопки в созданном окне
+        x = 10
+        y = 140
+        #цикл, который создает кнопки на клавиатуре калькулятора
+        for bt in btns:
+            com = lambda x=bt: self.logicalc(x)
+            #параметры, присваиваемые каждой кнопке
+            Button(text=bt, bg="#00FF7F",
+                   font=("Times New Roman", 15),
+                   command=com).place(x=x, y=y,
+                                      width=100,
+                                      height=65)
+            x += 117
+            if x > 400:
+                x = 10
+                y += 81
+    #функция логики калькулятора
+    def logicalc(self, operation):
+        if operation == "C":
+            self.formula = ""
+        elif operation == "DEL":
+            self.formula = self.formula[0:-1]
+        #цикл, который проводит рассчеты
+        elif operation == "=":
+            #получаем строку для рассчета
+            string1 = str(self.formula)
+            string = string1
+            #поиск модуля
+            #ищем "d",")" и вырезаем то, что между ними, переводим его в int
+            mod01 = string.find("d")
+            string = string[mod01 + 1:]
+            mod02 = string.find(")")
+            mod03 = string[:mod02]
+            mod = int(mod03)
+            #проверяем, нужно ли найти обратное число в заданном выражении
+            fd = "/"
+            global expression
+            if fd in string1:
+                result = string1
+                #ищем "/" и с помощью метода re находим число, которое после него, переводим его в int
+                index_del = result.find("/")
+                m = result[index_del + 1:]
+                regexp = r"(\d+)"
+                a = re.search(regexp, m)
+                kk = result.rfind(a[0])
+                a = int(a[0])
+                i = 0
+                j = 0
+                a_new = 0
+                #методом подбора находим обрадное число, и заменяем его в выражении
+                for i in range(100):
+                    for j in range(100):
+                        if ((i * a) + (j * mod) == 1) or ((i * a) - (j * mod) == 1):
+                            a_new = i
+                            expression = result
+                            expression = expression.replace('/', '*')
+                            expression = expression.replace(str(a), str(a_new))
+                            zz = expression.find("(")
+                            expression = expression[:zz]
+                            #считаем полученное выражение и находим ответ по модулю
+                            total1 = eval(str(expression))
+                            total = int(total1) % mod
+                            self.formula = total
+
+                        else:
+                            j += 1
+                    i += 1
+                    if a_new != 0:
+                        break
+            else:
+                #если не требуется поиск обратного, то получаем зачение выражения и находим ответ по модулю
+                result = string1
+                index_mod = result.find("(")
+                total1 = eval(result[:index_mod])
+                if int(total1) < 0:
+                    total1 = int(total1) + mod
+                total = int(total1) % mod
+                self.formula = total
+
+
+        else:
+            if self.formula == "0":
+                self.formula = ""
+            self.formula += operation
+        self.update()
+
+    #функция добавления переменных в строку выражения
+    def update(self):
+        if self.formula == "":
+            self.formula = "0"
+        self.lbl.configure(text=self.formula)
+
+#параметры окна графического дизайна
+if __name__ == '__main__':
+    root = Tk()
+    root["bg"] = "#000"
+    root.geometry("472x540+200+200")
+    root.title("Калькулятор")
+    root.resizable(False, False)
+    app = Main(root)
+    app.pack()
+    root.mainloop()
